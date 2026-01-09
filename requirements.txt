@@ -1,0 +1,9 @@
+flask
+flask-socketio
+requests
+openai
+python-dotenv
+gevent
+gevent-websocket
+beautifulsoup4
+lxml

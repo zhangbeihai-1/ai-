@@ -1,0 +1,2470 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 - AI智能政企瞭望系统{% endblock %}
+
+{% block content %}
+<div class="flex flex-col min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-dark-light border-b border-white/10 sticky top-0 z-50">
+        <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center">
+                <button class="text-gray-400 hover:text-white mr-6 lg:hidden" id="toggleSidebar">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <i class="fas fa-microchip text-primary text-xl"></i>
+                </div>
+                <h1 class="ml-3 text-xl font-bold text-shadow">AI智能政企瞭望系统</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="text-gray-400 hover:text-white relative">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span
+                        class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-danger ring-2 ring-dark-light"></span>
+                </button>
+                <div class="flex items-center">
+                    <div
+                        class="w-10 h-10 rounded-full bg-primary/30 flex items-center justify-center border border-primary/50">
+                        <i class="fas fa-user-shield text-primary"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium">{{ session.get('username', '管理员') }}</span>
+                    <a href="{{ url_for('main.logout') }}"
+                        class="ml-4 text-gray-400 hover:text-danger transition-colors">
+                        <i class="fas fa-power-off"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边导航栏 -->
+        <aside class="w-64 bg-dark border-r border-white/10 hidden lg:block overflow-y-auto" id="sidebar">
+            <div class="px-6 py-6 border-b border-white/5 mb-4">
+                <div class="flex items-center text-primary">
+                    <i class="fas fa-project-diagram mr-2 text-xl"></i>
+                    <span class="text-xl font-bold tracking-wider">政企瞭望</span>
+                </div>
+            </div>
+            <nav class="py-2">
+                <div class="space-y-1">
+                    {% set nav_items = [
+                    ('后台主页', 'tachometer-alt', 'dashboard'),
+                    ('采集管理', 'tasks', 'acquisition'),
+                    ('爬虫管理', 'spider', 'spider'),
+                    ('数据管理', 'database', 'data'),
+                    ('深采管理', 'search-plus', 'deep'),
+                    ('AI模型管理', 'microchip', 'model'),
+                    ('AI分析报告', 'chart-line', 'analysis'),
+                    ('AI数智大屏', 'desktop', 'screen')
+                    ] %}
+                    {% for name, icon, id in nav_items %}
+                    <a class="nav-link flex items-center px-6 py-4 transition-all duration-300 {{ 'bg-primary/20 border-l-4 border-primary text-white' if loop.first else 'text-gray-400 hover:bg-white/5 hover:text-white' }}"
+                        href="#" data-target="{{ id }}">
+                        <i class="fas fa-{{ icon }} mr-4 w-5 text-center"></i>
+                        <span class="font-medium">{{ name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 页面内容区域 -->
+        <main class="flex-1 overflow-y-auto p-6 bg-dark bg-grid">
+            <!-- 仪表盘页面 -->
+            <div class="page-content" id="dashboard-page">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                    <!-- 统计卡片 (保持不变) -->
+                    <div
+                        class="bg-dark-light rounded-lg p-6 border border-primary/30 hover:border-primary hover:shadow-neon transition-all duration-300 animate-float">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">总数据量</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow">{{ stats.get('total_data',
+                                    '0') }}</h3>
+                            </div>
+                            <div class="bg-primary/20 p-3 rounded-full"><i
+                                    class="fas fa-database text-primary text-xl"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i> 8.5% <span class="text-gray-400 ml-2">较上月</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-light rounded-lg p-6 border border-secondary/30 hover:border-secondary hover:shadow-neon-secondary transition-all duration-300 animate-float"
+                        style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">总爬虫量</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow">{{ stats.get('total_spiders',
+                                    '0') }}</h3>
+                            </div>
+                            <div class="bg-secondary/20 p-3 rounded-full"><i
+                                    class="fas fa-spider text-secondary text-xl"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i> 12.3% <span class="text-gray-400 ml-2">较上月</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-light rounded-lg p-6 border border-accent/30 hover:border-accent hover:shadow-neon transition-all duration-300 animate-float"
+                        style="animation-delay: 0.4s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">AI引擎状态</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow" id="ai-engine-status">{{
+                                    stats.get('ai_engine_status', '未知') }}</h3>
+                            </div>
+                            <div class="bg-accent/20 p-3 rounded-full"><i class="fas fa-brain text-accent text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-green-500 text-sm">
+                            <i class="fas fa-check-circle mr-1"></i> 运行中
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-light rounded-lg p-6 border border-blue-500/30 hover:border-blue-500 hover:shadow-neon transition-all duration-300 animate-float"
+                        style="animation-delay: 0.6s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">网络状态</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow">{{
+                                    stats.get('network_status', '未知') }}</h3>
+                            </div>
+                            <div class="bg-blue-500/20 p-3 rounded-full"><i
+                                    class="fas fa-wifi text-blue-500 text-xl"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-green-500 text-sm">
+                            <i class="fas fa-signal mr-1"></i> 99.9% <span class="text-gray-400 ml-2">连通率</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-light rounded-lg p-6 border border-green-500/30 hover:border-green-500 hover:shadow-neon transition-all duration-300 animate-float"
+                        style="animation-delay: 0.8s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">系统运行时间</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow" id="system-uptime-val">{{
+                                    stats.get('system_uptime', '未知') }}</h3>
+                            </div>
+                            <div class="bg-green-500/20 p-3 rounded-full"><i
+                                    class="fas fa-server text-green-500 text-xl"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-green-500 text-sm">
+                            <i class="fas fa-clock mr-1"></i> 运行正常
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-light rounded-lg p-6 border border-purple-500/30 hover:border-purple-500 hover:shadow-neon transition-all duration-300 animate-float"
+                        style="animation-delay: 1.0s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">AI Token 消耗</p>
+                                <h3 class="text-2xl font-bold mt-1 text-white text-shadow">{{
+                                    "{:,}".format(total_tokens) }}</h3>
+                            </div>
+                            <div class="bg-purple-500/20 p-3 rounded-full"><i
+                                    class="fas fa-coins text-purple-500 text-xl"></i></div>
+                        </div>
+                        <div class="mt-4 flex items-center text-gray-400 text-sm">累计消耗</div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div
+                        class="bg-dark-light rounded-lg p-6 border border-white/10 hover:border-secondary hover:shadow-neon-secondary transition-all">
+                        <h2 class="text-lg font-semibold mb-4 text-white">数据采集趋势</h2>
+                        <div class="w-full h-80" id="acquisition-chart"></div>
+                    </div>
+                    <div class="bg-dark-light rounded-lg p-6 border border-white/10">
+                        <h2 class="text-lg font-semibold mb-4 text-white">数据来源分布</h2>
+                        <div class="w-full h-80" id="sentiment-chart"></div>
+                    </div>
+                </div>
+
+                <!-- 系统状态底栏 (精简版) -->
+                <div
+                    class="mt-8 bg-dark-light/50 backdrop-blur-md rounded-xl p-4 border border-white/5 animate-fade-in">
+                    <div class="flex flex-wrap items-center justify-around gap-6">
+                        <div class="flex items-center space-x-4 min-w-[200px]">
+                            <i class="fas fa-microchip text-primary/60"></i>
+                            <div class="flex-1">
+                                <div
+                                    class="flex justify-between text-[10px] uppercase tracking-wider text-gray-500 mb-1">
+                                    <span>CPU Load</span>
+                                    <span id="cpu-usage-val">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                                    <div id="cpu-usage-bar" class="bg-primary h-full transition-all duration-700"
+                                        style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 min-w-[200px]">
+                            <i class="fas fa-memory text-secondary/60"></i>
+                            <div class="flex-1">
+                                <div
+                                    class="flex justify-between text-[10px] uppercase tracking-wider text-gray-500 mb-1">
+                                    <span>Memory</span>
+                                    <span id="mem-usage-val">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                                    <div id="mem-usage-bar" class="bg-secondary h-full transition-all duration-700"
+                                        style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 min-w-[200px]">
+                            <i class="fas fa-hdd text-accent/60"></i>
+                            <div class="flex-1">
+                                <div
+                                    class="flex justify-between text-[10px] uppercase tracking-wider text-gray-500 mb-1">
+                                    <span>Disk Space</span>
+                                    <span id="disk-usage-val">0%</span>
+                                </div>
+                                <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                                    <div id="disk-usage-bar" class="bg-accent h-full transition-all duration-700"
+                                        style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据采集页面 -->
+            <div class="page-content hidden" id="acquisition-page">
+                <!-- 1. 关键字输入框 (顶部) -->
+                <div class="bg-dark-light rounded-xl p-6 border border-white/10 mb-6 animate-fade-in">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="global-keyword" placeholder="输入核心搜索关键词..."
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-white text-lg focus:outline-none focus:border-primary transition-all">
+                        </div>
+                        <button onclick="startGlobalCrawl()"
+                            class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-bold flex items-center justify-center transition-all btn-hover shadow-neon whitespace-nowrap">
+                            <i class="fas fa-rocket mr-2"></i> 立即开启搜寻
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. 爬虫源选择开关面板 -->
+                <div class="bg-dark-light rounded-xl p-6 border border-white/10 mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-4 flex items-center">
+                        <i class="fas fa-plug mr-2 text-secondary"></i> 智能爬虫源选择
+                    </h3>
+                    <div class="flex flex-wrap gap-4">
+                        {% for crawler in crawlers %}
+                        <label class="relative flex items-center cursor-pointer group">
+                            <input type="checkbox" name="crawler_source" value="{{ crawler.id }}"
+                                data-type="{{ crawler.type }}" class="hidden peer" checked>
+                            <div
+                                class="bg-white/5 border border-white/10 px-4 py-2 rounded-lg flex items-center transition-all peer-checked:bg-primary/20 peer-checked:border-primary peer-checked:text-white group-hover:bg-white/10">
+                                <i class="fas fa-{{
+                                    'spider' if 'search' in crawler.type or crawler.type == 'baidu' else
+                                    'newspaper' if 'news' in crawler.type else
+                                    'search' if '360' in crawler.type else
+                                    'code'
+                                }} mr-2 text-primary"></i>
+                                <span class="text-gray-300 peer-checked:text-white">{{ crawler.name }}</span>
+                                <div
+                                    class="ml-3 w-3 h-3 rounded-full {{ 'bg-green-500' if crawler.status == '可用' else 'bg-yellow-500' }} animate-pulse-slow">
+                                </div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 3. 橱窗数据列表 (即时渲染区域) -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <span class="relative flex h-3 w-3 mr-3">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                        </span>
+                        实时采集展示窗
+                    </h3>
+                    <div class="flex items-center space-x-3">
+                        <label id="select-all-container"
+                            class="hidden flex items-center text-sm text-gray-400 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)"
+                                class="mr-2 w-4 h-4 rounded border-gray-300 text-primary">
+                            全选当前
+                        </label>
+                        <button onclick="saveSelectedItems()" id="save-btn"
+                            class="hidden bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm transition-all flex items-center shadow-lg">
+                            <i class="fas fa-save mr-2"></i> 保存选中 (<span id="selected-count">0</span>)
+                        </button>
+                        <button onclick="clearShowcase()" class="text-gray-400 hover:text-white text-sm">清空列表</button>
+                    </div>
+                </div>
+
+                <!-- 滚动监听区域 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]"
+                    id="showcase-list">
+                    <!-- 动态插入的内容 -->
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-500"
+                        id="empty-hint">
+                        <i class="fas fa-satellite fa-3x mb-4 text-white/5"></i>
+                        <p>等待指令中，数据将即时渲染至此处...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 爬虫管理页面 (已实现列表) -->
+            <div class="page-content hidden" id="spider-page">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-shadow">爬虫管理</h2>
+                    <button onclick="openAddSpiderModal()"
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all btn-hover shadow-neon">
+                        <i class="fas fa-plus mr-2"></i> 新增爬虫源
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for crawler in crawlers %}
+                    <div
+                        class="bg-dark-light border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-all group">
+                        <div class="flex items-center mb-4">
+                            <div
+                                class="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center text-primary mr-4">
+                                <i class="fas fa-{{ 'code' if crawler.type == 'script' else 'spider' }} text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-bold text-white">{{ crawler.name }}</h3>
+                                <p class="text-xs text-gray-500">类型: {{ '自定义脚本' if crawler.type == 'script' else '通用爬虫'
+                                    }}</p>
+                            </div>
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="text-gray-500 hover:text-danger"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4 line-clamp-2 h-10">{{ crawler.description or '暂无描述信息...' }}
+                        </p>
+                        <div class="flex justify-between items-center text-sm">
+                            <span
+                                class="px-2 py-1 rounded text-xs {{ 'bg-green-500/20 text-green-500' if crawler.status == '可用' else 'bg-yellow-500/20 text-yellow-500' }}">
+                                {{ crawler.status }}
+                            </span>
+                            <span class="text-xs text-gray-600">创建于: {{ crawler.create_time[:10] }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 新增爬虫 Modal -->
+            <div id="add-spider-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAddSpiderModal()"></div>
+                <div
+                    class="bg-dark-light border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative animate-scale-in">
+                    <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-plus-circle mr-2 text-primary"></i> 新增配置爬虫
+                        </h3>
+                        <button onclick="closeAddSpiderModal()" class="text-gray-400 hover:text-white"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">爬虫名称</label>
+                            <input type="text" id="spider-name" placeholder="例如: 某政务网采集脚本"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">爬虫类型</label>
+                            <select id="spider-type" onchange="toggleSpiderTypeFields()"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-primary outline-none text-gray-300">
+                                <option value="script">自定义 Python 脚本</option>
+                                <option value="generic">通用 HTTP 采集器</option>
+                            </select>
+                        </div>
+                        <div id="script-fields">
+                            <label class="block text-sm text-gray-400 mb-2">脚本路径 (dist/ 目录下)</label>
+                            <input type="text" id="spider-script-path" placeholder="dist/myspider/main.py"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-primary outline-none">
+                        </div>
+                        <div id="generic-fields" class="hidden">
+                            <label class="block text-sm text-gray-400 mb-2">采集配置 (JSON 格式)</label>
+                            <textarea id="spider-config" rows="4" placeholder='{"base_url": "...", "selectors": {...}}'
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-primary outline-none font-mono text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">描述 (可选)</label>
+                            <textarea id="spider-desc" rows="2"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-primary outline-none"></textarea>
+                        </div>
+                    </div>
+                    <div class="p-6 border-t border-white/10 flex justify-end space-x-3">
+                        <button onclick="closeAddSpiderModal()"
+                            class="px-6 py-2 rounded-lg text-gray-400 hover:text-white transition-all">取消</button>
+                        <button onclick="submitAddSpider()"
+                            class="bg-primary hover:bg-primary/90 text-white px-8 py-2 rounded-lg font-bold shadow-neon transition-all">确认添加</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据管理页面 -->
+            <div class="page-content hidden" id="data-page">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-shadow">数据管理资产库</h2>
+
+                    <!-- 搜索区 -->
+                    <div class="relative w-full md:w-80">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="data-search-keyword" oninput="debounceSearch()"
+                            placeholder="模糊搜索标题、描述、URL..."
+                            class="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-primary focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- 功能区 (批量操作) -->
+                <div
+                    class="bg-dark-light/50 border border-white/5 rounded-lg p-3 mb-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center text-sm text-gray-400 cursor-pointer">
+                            <input type="checkbox" id="data-select-all" onchange="toggleDataSelectAll(this)"
+                                class="mr-2 w-4 h-4 rounded border-gray-300 text-primary">
+                            全选
+                        </label>
+                        <div class="h-4 w-px bg-white/10"></div>
+                        <button onclick="batchDeleteData()"
+                            class="text-xs text-gray-400 hover:text-danger flex items-center transition-colors">
+                            <i class="fas fa-trash-alt mr-1"></i> 批量删除
+                        </button>
+                        <button onclick="batchDeepCollect()"
+                            class="text-xs text-gray-400 hover:text-accent flex items-center transition-colors">
+                            <i class="fas fa-microchip mr-1"></i> 批量AI深度采集
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        已选择 <span id="data-selected-count" class="text-primary font-bold">0</span> 项
+                    </div>
+                </div>
+
+                <div class="bg-dark-light rounded-xl border border-white/10 overflow-hidden shadow-2xl transition-all">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse" id="main-data-table">
+                            <thead>
+                                <tr class="bg-white/5 border-b border-white/10">
+                                    <th class="p-4 w-10"></th>
+                                    <th class="p-4 text-gray-400 font-medium">数据详情</th>
+                                    <th class="p-4 text-gray-400 font-medium w-32">深采状态</th>
+                                    <th class="p-4 text-gray-400 font-medium">采集时间</th>
+                                    <th class="p-4 text-gray-400 font-medium text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-table-body">
+                                <!-- 由 JS 动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页组件 -->
+                    <div
+                        class="p-4 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="text-sm text-gray-500">
+                            共 <span id="data-total-count" class="text-white">0</span> 条记录，当前第 <span
+                                id="data-current-page" class="text-white">1</span> 页
+                        </div>
+                        <div class="flex items-center space-x-2" id="data-pagination">
+                            <!-- 分页按钮动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- AI模型管理页面 -->
+            <div class="page-content hidden" id="model-page">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-shadow">大模型服务引擎</h2>
+                        <p class="text-gray-500 text-sm mt-1">支持 OpenAI 标准 API 范式的多模型接入与状态监控</p>
+                    </div>
+                    <button onclick="openAddModelModal()"
+                        class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-lg hover:shadow-purple-500/20">
+                        <i class="fas fa-plus mr-2"></i> 接入新引擎
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {% for model in ai_models %}
+                    <div
+                        class="bg-dark-light border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all group relative">
+                        <div class="h-2 bg-gradient-to-r from-purple-600 to-blue-500"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                    <i class="fas fa-microchip text-2xl"></i>
+                                </div>
+                                <div class="flex space-x-2 text-gray-500">
+                                    <button
+                                        onclick='openChatTestModal({{ model.id | tojson | safe }}, {{ model.name | tojson | safe }})'
+                                        class="hover:text-primary transition-colors">
+                                        <i class="fas fa-comment-dots text-lg"></i>
+                                    </button>
+                                    <button onclick='deleteModel({{ model.id | tojson | safe }})'
+                                        class="hover:text-danger transition-colors">
+                                        <i class="fas fa-trash-alt text-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <h3 class="text-xl font-bold text-white mb-1">{{ model.name }}</h3>
+                            <p class="text-xs text-gray-500 font-mono mb-4 truncate">{{ model.model_name }}</p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400">API 终端</span>
+                                    <span class="text-gray-300 truncate max-w-[150px]">{{ model.api_url }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400">消耗 Token</span>
+                                    <span class="text-purple-400 font-bold">{{ "{:,}".format(model.used_tokens)
+                                        }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400">服务状态</span>
+                                    <span class="text-green-500 flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                                        已连接
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-white/5 flex gap-2">
+                                <button
+                                    onclick='openChatTestModal({{ model.id | tojson | safe }}, {{ model.name | tojson | safe }})'
+                                    class="flex-1 bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg text-sm font-medium transition-all">
+                                    连接测试
+                                </button>
+                                <button onclick='editModel({{ model | tojson | safe }})'
+                                    class="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-primary transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div
+                        class="col-span-full py-20 bg-dark-light/50 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-gray-500">
+                        <i class="fas fa-robot text-6xl mb-4 opacity-10"></i>
+                        <p>尚未接入任何 AI 引擎，请点击右上角开始</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 接入/编辑模型 Modal -->
+            <div id="model-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModelModal()"></div>
+                <div
+                    class="bg-dark-light border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden animate-scale-in">
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-500 p-4">
+                        <h3 class="text-white font-bold text-lg flex items-center" id="model-modal-title">
+                            <i class="fas fa-plus-circle mr-2"></i> 接入新引擎
+                        </h3>
+                    </div>
+                    <form onsubmit="submitModelForm(event)" class="p-6 space-y-4">
+                        <input type="hidden" id="model-id">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">模型显示名称</label>
+                                <input type="text" id="model-display-name" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-purple-500 outline-none text-sm"
+                                    placeholder="如：我的 DeepSeek">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">模型物理名称 (Real Name)</label>
+                                <input type="text" id="model-real-name" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-purple-500 outline-none text-sm"
+                                    placeholder="如：deepseek-ai/DeepSeek-V3">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">API Base URL</label>
+                            <input type="url" id="model-api-url" required placeholder="https://api.openai.com/v1/"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-purple-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">API Key</label>
+                            <input type="password" id="model-api-key" required placeholder="sk-..."
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-purple-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">系统提示词 (System Prompt)</label>
+                            <textarea id="model-system-prompt" rows="3"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:border-purple-500 outline-none text-sm"
+                                placeholder="输入该模型的角色定义..."></textarea>
+                        </div>
+                        <div class="pt-4 flex justify-end space-x-3">
+                            <button type="button" onclick="closeModelModal()"
+                                class="px-6 py-2 rounded-lg text-gray-400 hover:text-white transition-all">取消</button>
+                            <button type="submit" id="model-modal-btn"
+                                class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-2 rounded-lg font-bold shadow-neon transition-all">确认接入</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 深度采集进度 Modal -->
+            <div id="deep-crawl-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+                <div
+                    class="bg-dark-light border border-white/10 w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden animate-scale-in">
+                    <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                        <h3 class="font-bold text-white flex items-center">
+                            <i class="fas fa-microchip mr-2 text-accent"></i> AI 深度采集执行中
+                        </h3>
+                        <span id="deep-crawl-status"
+                            class="text-xs bg-accent/20 text-accent px-2 py-1 rounded">正在初始化...</span>
+                    </div>
+                    <div class="p-8">
+                        <div class="mb-6">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-400">总体进度</span>
+                                <span class="text-white font-mono" id="deep-crawl-percent">0%</span>
+                            </div>
+                            <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                                <div id="deep-crawl-bar"
+                                    class="h-full bg-gradient-to-r from-accent to-blue-500 w-0 transition-all duration-500 shadow-neon-accent">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-black/30 rounded-xl p-4 h-48 overflow-y-auto mb-6 border border-white/5 font-mono text-xs text-gray-400 space-y-2"
+                            id="deep-crawl-logs">
+                            <div class="text-accent">> 系统准备就绪...</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div class="bg-white/5 p-3 rounded-lg border border-white/5">
+                                <div class="text-gray-500 text-[10px] uppercase mb-1">已处理</div>
+                                <div class="text-xl font-bold text-white" id="deep-crawl-count">0</div>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg border border-white/5">
+                                <div class="text-gray-500 text-[10px] uppercase mb-1">成功</div>
+                                <div class="text-xl font-bold text-green-500" id="deep-crawl-success">0</div>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-lg border border-white/5">
+                                <div class="text-gray-500 text-[10px] uppercase mb-1">失败</div>
+                                <div class="text-xl font-bold text-danger" id="deep-crawl-fail">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/5 border-t border-white/10 flex justify-end">
+                        <button id="deep-crawl-close-btn" disabled onclick="closeDeepCrawlModal()"
+                            class="px-8 py-2 bg-white/10 text-gray-400 rounded-lg hover:bg-white/20 hover:text-white transition-all disabled:opacity-50">完成并关闭</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 深度采集详情/编辑 Modal -->
+            <div id="deep-data-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeDeepDataModal()"></div>
+                <div
+                    class="bg-dark-light border border-white/10 w-full max-w-3xl h-[80vh] rounded-2xl shadow-2xl relative flex flex-col animate-scale-in">
+                    <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                        <h3 class="font-bold text-white flex items-center">
+                            <i class="fas fa-file-alt mr-2 text-accent"></i> 深度采集详情解析
+                        </h3>
+                        <button onclick="closeDeepDataModal()" class="text-gray-400 hover:text-white"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <form id="deep-data-form" class="space-y-6">
+                            <input type="hidden" id="deep-data-id">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="col-span-2">
+                                    <label
+                                        class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">解析标题</label>
+                                    <input type="text" id="deep-data-title"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white outline-none focus:border-accent">
+                                </div>
+                                <div class="col-span-2">
+                                    <label
+                                        class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">智能摘要</label>
+                                    <textarea id="deep-data-summary" rows="2"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-300 outline-none focus:border-accent"></textarea>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">智能分类</label>
+                                    <input type="text" id="deep-data-category"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-gray-300 outline-none focus:border-accent">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">情感倾向</label>
+                                    <input type="text" id="deep-data-sentiment"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-gray-300 outline-none focus:border-accent">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">核心解构内容
+                                        (Clean Text)</label>
+                                    <textarea id="deep-data-content" rows="6"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-400 text-sm font-mono outline-none focus:border-accent"></textarea>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs text-gray-500 mb-2 uppercase tracking-wider">结构化数据
+                                        (JSON)</label>
+                                    <textarea id="deep-data-json" rows="4"
+                                        class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-accent text-xs font-mono outline-none focus:border-accent"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="p-4 bg-white/5 border-t border-white/10 flex justify-end space-x-3">
+                        <button onclick="closeDeepDataModal()"
+                            class="px-6 py-2 text-gray-400 hover:text-white transition-all">关闭</button>
+                        <button onclick="saveDeepData()"
+                            class="px-8 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg font-bold shadow-neon-accent transition-all">保存修改</button>
+                    </div>
+                </div>
+            </div>
+            <div id="chat-test-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeChatTestModal()"></div>
+                <div
+                    class="bg-dark-light border border-white/10 w-full max-w-2xl h-[600px] rounded-2xl shadow-2xl relative flex flex-col animate-scale-in">
+                    <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
+                            <h3 class="font-bold text-white">模型服务连通测试: <span id="chat-model-name"
+                                    class="text-purple-400"></span>
+                            </h3>
+                        </div>
+                        <button onclick="closeChatTestModal()"
+                            class="text-gray-400 hover:text-white transition-colors"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chat-window">
+                        <div class="flex justify-start">
+                            <div class="bg-white/5 rounded-2xl rounded-tl-none p-4 max-w-[80%] text-gray-300 text-sm">
+                                欢迎进入模型测试模式！您可以发送任何消息来验证 API 连通性以及系统提示词逻辑。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white/5 border-t border-white/10">
+                        <form onsubmit="sendChatMessage(event)" class="flex gap-2">
+                            <input type="hidden" id="chat-model-id">
+                            <input type="text" id="chat-input" placeholder="输入测试指令..."
+                                class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-purple-500 transition-all">
+                            <button type="submit" id="chat-send-btn"
+                                class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white hover:bg-purple-500 transition-all">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                        <div class="mt-2 text-[10px] text-gray-500 flex justify-between px-1">
+                            <span>* 每次对话都将实时统计 Token 消耗并入库</span>
+                            <span id="chat-status-hint">准备就绪</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 深度采集管理页面 -->
+            <div class="page-content hidden" id="deep-page">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-shadow">AI深度采集资产库</h2>
+                    <div class="relative w-full md:w-80">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="deep-search-keyword" oninput="debounceDeepSearch()"
+                            placeholder="搜索标题、内容、URL..."
+                            class="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-accent focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- 功能区 (批量操作) -->
+                <div
+                    class="bg-dark-light/50 border border-white/5 rounded-lg p-3 mb-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center text-sm text-gray-400 cursor-pointer">
+                            <input type="checkbox" id="deep-select-all" onchange="toggleDeepSelectAll(this)"
+                                class="mr-2 w-4 h-4 rounded border-gray-300 text-accent">
+                            全选
+                        </label>
+                        <div class="h-4 w-px bg-white/10"></div>
+                        <button onclick="batchDeleteDeepData()"
+                            class="text-xs text-gray-400 hover:text-danger flex items-center transition-colors">
+                            <i class="fas fa-trash-alt mr-1"></i> 批量删除
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        已找到 <span id="deep-total-count" class="text-accent font-bold">0</span> 条深度解析数据
+                    </div>
+                </div>
+
+                <div class="bg-dark-light rounded-xl border border-white/10 overflow-hidden shadow-2xl transition-all">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse" id="deep-data-table">
+                            <thead>
+                                <tr class="bg-white/5 border-b border-white/10">
+                                    <th class="p-4 w-10"></th>
+                                    <th class="p-4 text-gray-400 font-medium">深度解析详情</th>
+                                    <th class="p-4 text-gray-400 font-medium">所属源数据</th>
+                                    <th class="p-4 text-gray-400 font-medium w-48">智能分类</th>
+                                    <th class="p-4 text-gray-400 font-medium">采集时间</th>
+                                    <th class="p-4 text-gray-400 font-medium w-32">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300" id="deep-data-list">
+                                <!-- 由 JS 动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页组件 -->
+                    <div
+                        class="p-4 border-t border-white/5 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-xs text-gray-500">
+                            显示第 <span id="deep-page-range">1-10</span> 条，共 <span id="deep-page-total">0</span> 条
+                        </div>
+                        <div class="flex space-x-2" id="deep-pagination">
+                            <!-- 由 JS 动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI分析报告 (ChatGPT 模式) -->
+            <div class="page-content hidden flex h-[calc(100vh-120px)] border border-white/10 rounded-xl overflow-hidden bg-dark-light/20 backdrop-blur-sm"
+                id="analysis-page">
+                <!-- 左侧会话历史列表 (ChatGPT 风格) -->
+                <div class="w-64 md:w-72 border-r border-white/10 flex flex-col bg-dark-light/50">
+                    <div class="p-4 border-b border-white/10">
+                        <button onclick="startNewAnalysisChat()"
+                            class="w-full py-2.5 px-4 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-lg flex items-center justify-center transition-all group">
+                            <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform"></i>
+                            <span class="font-bold">开启新分析会话</span>
+                        </button>
+                    </div>
+
+                    <div id="analysis-history-list" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                        <!-- 由 JS 加载历史记录 -->
+                        <div class="text-center py-10 text-gray-600 text-xs">暂无历史会话</div>
+                    </div>
+
+                    <div
+                        class="p-4 border-t border-white/10 bg-black/20 text-[10px] text-gray-500 flex justify-between">
+                        <span>会话自动同步至云端</span>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                </div>
+
+                <!-- 右侧对话主区域 -->
+                <div class="flex-1 flex flex-col relative bg-transparent">
+                    <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-line mr-3 text-primary"></i>
+                            <div>
+                                <h2 class="text-sm font-bold text-white" id="current-chat-title">政企数据智能分析</h2>
+                                <p class="text-[10px] text-gray-500" id="current-chat-status">当前：就绪</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select id="analysis-model-select"
+                                class="bg-dark border border-white/10 text-gray-400 text-[10px] rounded px-2 py-1 outline-none focus:border-primary transition-all">
+                                {% for model in ai_models %}
+                                <option value="{{ model.id }}" {{ 'selected' if loop.first }}>{{ model.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="analysis-chat-window" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                        <!-- 欢迎消息 (首次开启默认显示) -->
+                        <div id="analysis-welcome" class="flex justify-start">
+                            <div class="flex items-start max-w-[85%]">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-3 flex-shrink-0 border border-primary/20">
+                                    <i class="fas fa-robot text-primary text-xs"></i>
+                                </div>
+                                <div
+                                    class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none p-4 text-gray-300 text-sm leading-relaxed shadow-lg">
+                                    你好！我是政企数智分析助手。我已经准备好为您分析数据库中的采集信息。
+                                    <br><br>
+                                    您可以直接在下方输入指令，或者从左侧快速切换历史分析成果。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 输入控制条 -->
+                    <div class="p-6 bg-transparent">
+                        <div class="max-w-4xl mx-auto relative group">
+                            <div
+                                class="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity">
+                            </div>
+                            <div
+                                class="relative bg-dark-light/80 border border-white/10 rounded-2xl flex items-end p-2 pr-3 shadow-2xl backdrop-blur-md">
+                                <textarea id="analysis-input" rows="1"
+                                    class="flex-1 bg-transparent border-none text-white text-sm px-3 py-2 outline-none resize-none max-h-48 overflow-y-auto"
+                                    placeholder="输入分析指令，如“统计本周采集量增长趋势”..."
+                                    onkeydown="handleAnalysisKey(event)"></textarea>
+                                <button onclick="sendAnalysisMessage()" id="analysis-send-btn"
+                                    class="w-9 h-9 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary/80 transition-all shadow-neon flex-shrink-0 mb-0.5">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <p class="text-[9px] text-gray-600">AI 分析结果基于现有数据库生成 · 支持 ECharts 可视化报告</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI数智大屏 (占位) -->
+            <div class="page-content hidden" id="screen-page">
+                <div class="flex flex-col items-center justify-center py-20 text-gray-500">
+                    <i class="fas fa-desktop fa-4x mb-6 text-white/10"></i>
+                    <h2 class="text-2xl font-bold text-white mb-2">AI数智大屏</h2>
+                    <p>可视化决策大屏正在进行像素级渲染...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/vendor/marked.min.js"></script>
+
+<!-- 使用本地 ECharts 库 -->
+<script src="/static/vendor/echarts/package/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    /* 思维链/思考过程样式 */
+    .thought-block {
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 2px solid rgba(22, 93, 255, 0.3);
+        padding: 10px 15px;
+        margin-bottom: 12px;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.85rem;
+        color: #6B7280;
+        font-style: italic;
+    }
+
+    .thought-header {
+        display: flex;
+        align-items: center;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 5px;
+        color: #4B5563;
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .loading-dots:after {
+        content: '.';
+        animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+
+        0%,
+        20% {
+            content: '.';
+        }
+
+        40% {
+            content: '..';
+        }
+
+        60% {
+            content: '...';
+        }
+
+        80%,
+        100% {
+            content: '';
+        }
+    }
+
+    /* Markdown 兼容性样式覆盖 */
+    .ai-content.markdown-body {
+        color: #D1D5DB;
+        line-height: 1.6;
+    }
+
+    .ai-content.markdown-body h1,
+    .ai-content.markdown-body h2,
+    .ai-content.markdown-body h3 {
+        color: #fff;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .ai-content.markdown-body h2 {
+        font-size: 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.5rem;
+    }
+
+    .ai-content.markdown-body strong {
+        color: #165DFF;
+    }
+
+    .ai-content.markdown-body p {
+        margin-bottom: 1rem;
+    }
+
+    .ai-content.markdown-body ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+    let eventSource = null;
+    let currentDataBuffer = [];
+    let selectedIndices = new Set();
+
+    // 数据管理状态
+    let dataPage = 1;
+    const dataPerPage = 10;
+    let dataSearchQuery = "";
+    const dataSelectedIds = new Set();
+    let searchTimer = null;
+
+    // 深度采集管理状态
+    let deepPage = 1;
+    const deepPerPage = 10;
+    let deepSearchQuery = "";
+    const deepSelectedIds = new Set();
+    let deepSearchTimer = null;
+    let deepEventSource = null;
+
+    // 1. 开始全局采集 (SSE 模式)
+    function startGlobalCrawl() {
+        const keywordInput = document.getElementById('global-keyword');
+        const keyword = keywordInput ? keywordInput.value : '';
+        if (!keyword) {
+            alert('请输入关键词');
+            return;
+        }
+
+        const selectedCrawlers = Array.from(document.querySelectorAll('input[name="crawler_source"]:checked'))
+            .map(el => el.value);
+        if (selectedCrawlers.length === 0) {
+            alert('请至少选择一个爬虫源');
+            return;
+        }
+
+        clearShowcase();
+        const emptyHint = document.getElementById('empty-hint');
+        if (emptyHint) emptyHint.classList.add('hidden');
+
+        // 显示全选按钮
+        const selectAllContainer = document.getElementById('select-all-container');
+        if (selectAllContainer) selectAllContainer.classList.remove('hidden');
+
+        // 目前演示版本使用第一个选中的爬虫源进行 SSE
+        const crawlerId = selectedCrawlers[0];
+        const url = `/crawler/stream?id=${crawlerId}&keyword=${encodeURIComponent(keyword)}&limit=20`;
+
+        if (eventSource) eventSource.close();
+
+        eventSource = new EventSource(url);
+
+        eventSource.onmessage = function (e) {
+            if (e.data === '[DONE]') {
+                eventSource.close();
+                return;
+            }
+            try {
+                const data = JSON.parse(e.data);
+                if (data.error) {
+                    alert('采集出错: ' + data.error);
+                    eventSource.close();
+                    return;
+                }
+                renderItem(data);
+            } catch (err) {
+                console.error("Parse Error:", err);
+            }
+        };
+
+        eventSource.onerror = function (e) {
+            console.error("SSE Error:", e);
+            eventSource.close();
+        };
+    }
+
+    // 2. 渲染单个橱窗项
+    function renderItem(item) {
+        const list = document.getElementById('showcase-list');
+        if (!list) return;
+
+        const index = currentDataBuffer.length;
+        currentDataBuffer.push(item);
+
+        const card = document.createElement('div');
+        card.id = `card-${index}`;
+        card.className = "bg-dark-light rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all transition-transform hover:-translate-y-2 group relative animate-fade-in";
+        card.innerHTML = `
+            <div class="relative h-48 overflow-hidden bg-white/5">
+                <img src="${item.img || 'https://via.placeholder.com/400x300/1D2129/165DFF?text=AI+Intelligence'}"
+                     alt="Cover" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                <div class="absolute top-2 right-2 z-10">
+                    <input type="checkbox" data-index="${index}" onchange="toggleSelection(${index}, this)" class="item-checkbox w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer shadow-lg">
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                    <span class="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">${item.source}</span>
+                </div>
+            </div>
+            <div class="p-4">
+                <a href="${item.url}" target="_blank" class="text-white font-bold block mb-2 hover:text-primary transition-colors line-clamp-2">${item.title}</a>
+                <p class="text-gray-400 text-sm line-clamp-3 mb-4">${item.description}</p>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <span><i class="far fa-clock mr-1"></i> ${item.time}</span>
+                </div>
+            </div>
+        `;
+        list.appendChild(card);
+        card.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function toggleSelectAll(checkbox) {
+        const isChecked = checkbox.checked;
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        checkboxes.forEach(cb => {
+            const idx = parseInt(cb.getAttribute('data-index'));
+            cb.checked = isChecked;
+            if (isChecked) {
+                selectedIndices.add(idx);
+            } else {
+                selectedIndices.delete(idx);
+            }
+        });
+        updateSaveButton();
+    }
+
+    function toggleSelection(index, checkbox) {
+        if (checkbox.checked) {
+            selectedIndices.add(index);
+        } else {
+            selectedIndices.delete(index);
+            // 如果取消了某个，全选框也要取消
+            document.getElementById('select-all-checkbox').checked = false;
+        }
+        updateSaveButton();
+    }
+
+    function updateSaveButton() {
+        const btn = document.getElementById('save-btn');
+        const countSpan = document.getElementById('selected-count');
+        if (btn && countSpan) {
+            if (selectedIndices.size > 0) {
+                btn.classList.remove('hidden');
+                countSpan.innerText = selectedIndices.size;
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+    }
+
+    async function saveSelectedItems() {
+        const selectedList = Array.from(selectedIndices).sort((a, b) => b - a); // 从后往前删，避免索引混乱
+        const itemsToSave = selectedList.map(idx => currentDataBuffer[idx]);
+
+        const btn = document.getElementById('save-btn');
+        if (!btn) return;
+
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 正在处理...';
+
+        try {
+            const response = await fetch('/data/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: itemsToSave })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+
+                // 从展示窗中移除已保存的项
+                selectedList.forEach(idx => {
+                    const card = document.getElementById(`card-${idx}`);
+                    if (card) {
+                        card.style.transform = 'scale(0.8)';
+                        card.style.opacity = '0';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                });
+
+                // 清理对应的索引和缓存（可选，简单起见可以直接刷新或者部分清理）
+                // 这里为了逻辑简单，保持 currentDataBuffer 不动，只移除 DOM
+                selectedIndices.clear();
+                document.getElementById('select-all-checkbox').checked = false;
+                updateSaveButton();
+
+                // 如果全部移完了，显示空提示
+                setTimeout(() => {
+                    const list = document.getElementById('showcase-list');
+                    if (list && list.children.length === 0) {
+                        clearShowcase();
+                    }
+                }, 400);
+            } else {
+                alert('保存失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('请求异常: ' + error);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
+    }
+
+    function openAddSpiderModal() {
+        document.getElementById('add-spider-modal').classList.remove('hidden');
+    }
+
+    function closeAddSpiderModal() {
+        document.getElementById('add-spider-modal').classList.add('hidden');
+    }
+
+    function toggleSpiderTypeFields() {
+        const type = document.getElementById('spider-type').value;
+        const scriptFields = document.getElementById('script-fields');
+        const genericFields = document.getElementById('generic-fields');
+        if (type === 'script') {
+            scriptFields.classList.remove('hidden');
+            genericFields.classList.add('hidden');
+        } else {
+            scriptFields.classList.add('hidden');
+            genericFields.classList.remove('hidden');
+        }
+    }
+
+    async function submitAddSpider() {
+        const payload = {
+            name: document.getElementById('spider-name').value,
+            type: document.getElementById('spider-type').value,
+            script_path: document.getElementById('spider-script-path').value,
+            config: document.getElementById('spider-config').value,
+            description: document.getElementById('spider-desc').value
+        };
+
+        if (!payload.name) {
+            alert('请输入爬虫名称');
+            return;
+        }
+
+        try {
+            const response = await fetch('/crawler/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                location.reload();
+            } else {
+                alert('添加失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('请求异常: ' + error);
+        }
+    }
+
+    function clearShowcase() {
+        const list = document.getElementById('showcase-list');
+        if (list) list.innerHTML = '';
+        currentDataBuffer = [];
+        selectedIndices.clear();
+        updateSaveButton();
+        const hint = document.getElementById('empty-hint');
+        if (hint) hint.classList.remove('hidden');
+
+        const selectAllContainer = document.getElementById('select-all-container');
+        if (selectAllContainer) selectAllContainer.classList.add('hidden');
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    }
+
+    async function deleteData(id) {
+        if (!confirm('确定要删除这条数据吗？')) return;
+
+        try {
+            const response = await fetch(`/data/delete/${id}`, { method: 'POST' });
+            const result = await response.json();
+            if (response.ok) {
+                // 如果当前在数据管理页面，刷新列表
+                const dataPageDiv = document.getElementById('data-page');
+                if (dataPageDiv && !dataPageDiv.classList.contains('hidden')) {
+                    loadDataList(dataPage);
+                } else {
+                    // 如果是在搜索出的卡片中删除（虽然目前主要在列表删），也可以简单提示或刷新
+                    alert('删除成功');
+                }
+            } else {
+                alert('删除失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('请求异常: ' + error);
+        }
+    }
+
+    // 数据管理核心逻辑
+    async function loadDataList(page = 1) {
+        dataPage = page;
+        const url = `/data/list?page=${page}&per_page=${dataPerPage}&keyword=${encodeURIComponent(dataSearchQuery)}`;
+
+        try {
+            const response = await fetch(url);
+            const result = await response.json();
+            if (response.ok) {
+                renderDataTable(result.data);
+                renderPagination(result.total, result.page, result.per_page);
+                document.getElementById('data-total-count').innerText = result.total;
+                document.getElementById('data-current-page').innerText = result.page;
+                // 重置全选
+                dataSelectedIds.clear();
+                document.getElementById('data-select-all').checked = false;
+                updateDataSelectedCount();
+            }
+        } catch (error) {
+            console.error("加载数据失败:", error);
+        }
+    }
+
+    function debounceSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            dataSearchQuery = document.getElementById('data-search-keyword').value;
+            loadDataList(1);
+        }, 500);
+    }
+
+    function renderDataTable(data) {
+        const tbody = document.getElementById('data-table-body');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-500">未找到匹配数据</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(item => `
+            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                <td class="p-4">
+                    <input type="checkbox" onchange="toggleDataSelection(${item.id}, this)" class="data-item-checkbox w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer shadow-lg" ${dataSelectedIds.has(item.id) ? 'checked' : ''}>
+                </td>
+                <td class="p-4">
+                    <div class="text-white font-medium truncate max-w-md">${item.title}</div>
+                    <div class="text-xs text-gray-500 truncate max-w-xs">${item.url}</div>
+                </td>
+                <td class="p-4">
+                    ${item.deep_data_id ? `
+                        <div class="flex items-center text-green-500 cursor-pointer hover:bg-green-500/10 p-1 rounded transition-all" onclick="navigateToDeep('${item.deep_data_id}')">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            <span class="text-[10px]">已采集</span>
+                        </div>
+                    ` : (item.deep_status === 1 ? `
+                        <div class="flex items-center text-accent animate-pulse">
+                            <i class="fas fa-spinner fa-spin mr-1"></i>
+                            <span class="text-[10px]">正在采集</span>
+                        </div>
+                    ` : (item.deep_status === 3 ? `
+                        <div class="flex items-center text-danger">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span class="text-[10px]">采集失败</span>
+                        </div>
+                    ` : `
+                        <div class="flex items-center text-gray-600">
+                            <i class="far fa-circle mr-1"></i>
+                            <span class="text-[10px]">待采集</span>
+                        </div>
+                    `))}
+                </td>
+                <td class="p-4 text-sm text-gray-500 font-mono">
+                    ${item.collect_time ? item.collect_time.substring(0, 16) : '-'}
+                </td>
+                <td class="p-4 text-right">
+                    <div class="flex items-center justify-end space-x-3">
+                        <a href="${item.url}" target="_blank" class="text-blue-400 hover:text-blue-300" title="跳转原链">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <button onclick="deleteData(${item.id})" class="text-danger hover:text-red-400" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button onclick="deepCollectSingle(${item.id})" class="text-accent hover:text-cyan-400" title="AI深度采集">
+                            <i class="fas fa-brain"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderPagination(total, current, perPage) {
+        const container = document.getElementById('data-pagination');
+        if (!container) return;
+
+        const totalPages = Math.ceil(total / perPage);
+        let html = '';
+
+        // 简单分页逻辑
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // 上一页
+        html += `<button onclick="loadDataList(${current - 1})" ${current === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:text-white"'} class="px-2 py-1 text-gray-400 text-sm"><i class="fas fa-chevron-left"></i></button>`;
+
+        // 页码
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= current - 2 && i <= current + 2)) {
+                html += `<button onclick="loadDataList(${i})" class="px-3 py-1 rounded text-sm ${i === current ? 'bg-primary text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}">${i}</button>`;
+            } else if (i === current - 3 || i === current + 3) {
+                html += `<span class="text-gray-600">...</span>`;
+            }
+        }
+
+        // 下一页
+        html += `<button onclick="loadDataList(${current + 1})" ${current === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:text-white"'} class="px-2 py-1 text-gray-400 text-sm"><i class="fas fa-chevron-right"></i></button>`;
+
+        container.innerHTML = html;
+    }
+
+    function toggleDataSelectAll(checkbox) {
+        const isChecked = checkbox.checked;
+        const checkboxes = document.querySelectorAll('.data-item-checkbox');
+
+        // 我们通过获取当前页渲染的所有行 ID 来更新 Set
+        const rows = document.querySelectorAll('.data-item-checkbox');
+        rows.forEach(cb => {
+            cb.checked = isChecked;
+            // Extract ID from the onchange attribute or a data attribute if available
+            // Assuming the ID is the first argument in toggleDataSelection(id, this)
+            const idMatch = cb.getAttribute('onchange').match(/toggleDataSelection\((\d+), this\)/);
+            if (idMatch && idMatch[1]) {
+                const id = parseInt(idMatch[1]);
+                if (isChecked) {
+                    dataSelectedIds.add(id);
+                } else {
+                    dataSelectedIds.delete(id);
+                }
+            }
+        });
+        updateDataSelectedCount();
+    }
+
+    function toggleDataSelection(id, checkbox) {
+        if (checkbox.checked) {
+            dataSelectedIds.add(id);
+        } else {
+            dataSelectedIds.delete(id);
+            document.getElementById('data-select-all').checked = false;
+        }
+        updateDataSelectedCount();
+    }
+
+    function updateDataSelectedCount() {
+        const counter = document.getElementById('data-selected-count');
+        if (counter) counter.innerText = dataSelectedIds.size;
+    }
+
+    // --- 深度采集核心逻辑 ---
+
+    function batchDeepCollect() {
+        if (dataSelectedIds.size === 0) {
+            alert('请先在表格中勾选需要进行 AI 深度采集的源数据');
+            return;
+        }
+
+        // 弹出确认框，由于需要选择模型，我们这里简化为使用默认激活模型或弹窗选择
+        // 目前系统默认有一个 SiliconFlow-Model，我们直接启动
+        const modelId = 1; // 默认第一个模型
+        startDeepCrawl(Array.from(dataSelectedIds), modelId);
+    }
+
+    function deepCollectSingle(id) {
+        startDeepCrawl([id], 1);
+    }
+
+    function startDeepCrawl(ids, modelId) {
+        document.getElementById('deep-crawl-modal').classList.remove('hidden');
+        const logs = document.getElementById('deep-crawl-logs');
+        logs.innerHTML = `<div class="text-accent">> 正在建立 AI 分析通道...</div>`;
+
+        // 重置进度条
+        updateDeepProgress(0, 0, 0, ids.length);
+        document.getElementById('deep-crawl-close-btn').disabled = true;
+
+        if (deepEventSource) deepEventSource.close();
+
+        const url = `/data/deep_crawl?ids=${ids.join(',')}&model_id=${modelId}`;
+        deepEventSource = new EventSource(url);
+
+        deepEventSource.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+
+            if (data.status === 'processing') {
+                const logEntry = document.createElement('div');
+                logEntry.innerHTML = `<span class="text-blue-400">[处理中 ${data.current}/${data.total}]</span> 正在深度解析: ${data.title}...`;
+                logs.appendChild(logEntry);
+                logs.scrollTop = logs.scrollHeight;
+
+                updateDeepProgress(data.progress, data.current, -1, data.total);
+            } else if (data.status === 'completed') {
+                const logEntry = document.createElement('div');
+                logEntry.className = "text-green-400 font-bold mt-2";
+                logEntry.innerHTML = `> 深度采集任务完成！成功: ${data.success}, 失败: ${data.fail}`;
+                logs.appendChild(logEntry);
+                logs.scrollTop = logs.scrollHeight;
+
+                updateDeepProgress(100, data.total, data.success, data.total, data.fail);
+                document.getElementById('deep-crawl-status').innerText = "任务已完成";
+                document.getElementById('deep-crawl-close-btn').disabled = false;
+                deepEventSource.close();
+
+                // 刷新列表状态
+                loadDataList(dataPage);
+            } else if (data.error) {
+                const logEntry = document.createElement('div');
+                logEntry.className = "text-danger";
+                logEntry.innerText = `> 错误: ${data.error}`;
+                logs.appendChild(logEntry);
+                deepEventSource.close();
+                document.getElementById('deep-crawl-close-btn').disabled = false;
+            }
+        };
+
+        deepEventSource.onerror = function () {
+            deepEventSource.close();
+            document.getElementById('deep-crawl-close-btn').disabled = false;
+        };
+    }
+
+    function updateDeepProgress(percent, current, success, total, fail = 0) {
+        document.getElementById('deep-crawl-percent').innerText = percent + '%';
+        document.getElementById('deep-crawl-bar').style.width = percent + '%';
+        document.getElementById('deep-crawl-count').innerText = current;
+        if (success !== -1) {
+            document.getElementById('deep-crawl-success').innerText = success;
+            document.getElementById('deep-crawl-fail').innerText = fail;
+        }
+    }
+
+    function closeDeepCrawlModal() {
+        document.getElementById('deep-crawl-modal').classList.add('hidden');
+    }
+
+    // --- 深度采集数据管理 ---
+
+    async function loadDeepDataList(page = 1) {
+        deepPage = page;
+        const url = `/deep_data/list?page=${page}&per_page=${deepPerPage}&keyword=${encodeURIComponent(deepSearchQuery)}`;
+
+        try {
+            const response = await fetch(url);
+            const result = await response.json();
+            if (response.ok) {
+                renderDeepTable(result.data);
+                renderDeepPagination(result.total, result.page, result.per_page);
+                document.getElementById('deep-total-count').innerText = result.total;
+                document.getElementById('deep-page-total').innerText = result.total;
+
+                const start = (result.page - 1) * result.per_page + 1;
+                const end = Math.min(result.page * result.per_page, result.total);
+                document.getElementById('deep-page-range').innerText = `${start}-${end}`;
+
+                deepSelectedIds.clear();
+                document.getElementById('deep-select-all').checked = false;
+            }
+        } catch (error) {
+            console.error("加载深度数据失败:", error);
+        }
+    }
+
+    function debounceDeepSearch() {
+        clearTimeout(deepSearchTimer);
+        deepSearchTimer = setTimeout(() => {
+            deepSearchQuery = document.getElementById('deep-search-keyword').value;
+            loadDeepDataList(1);
+        }, 500);
+    }
+
+    function renderDeepTable(data) {
+        const tbody = document.getElementById('deep-data-list');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500">尚无深度采集数据</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(item => {
+            const analysis = JSON.parse(item.structured_data || '{}');
+            return `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                    <td class="p-4">
+                        <input type="checkbox" onchange="toggleDeepSelection(${item.id}, this)" class="deep-item-checkbox w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent cursor-pointer" ${deepSelectedIds.has(item.id) ? 'checked' : ''}>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-white font-medium truncate max-w-xs">${item.title}</div>
+                        <div class="text-xs text-gray-500 line-clamp-1">${item.summary}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-xs text-gray-400 truncate max-w-[150px]">${item.source_title || '未知来源'}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-wrap gap-1">
+                            <span class="bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded border border-blue-500/30">${analysis.category || '未分类'}</span>
+                            <span class="${analysis.sentiment === '正面' ? 'bg-green-500/20 text-green-400 border-green-500/30' : (analysis.sentiment === '负面' ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30')} text-[10px] px-2 py-0.5 rounded border">${analysis.sentiment || '中性'}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-500 text-xs">${item.collect_time}</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-3">
+                            <button onclick='openDeepDataModal(${JSON.stringify(item).replace(/'/g, "&apos;")})' class="text-accent hover:text-cyan-400" title="查看详情">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteDeepData(${item.id})" class="text-danger hover:text-red-400" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderDeepPagination(total, current, perPage) {
+        const container = document.getElementById('deep-pagination');
+        if (!container) return;
+        const totalPages = Math.ceil(total / perPage);
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        let html = '';
+        html += `<button onclick="loadDeepDataList(${current - 1})" ${current === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:text-white"'} class="px-2 py-1 text-gray-400 text-sm"><i class="fas fa-chevron-left"></i></button>`;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= current - 2 && i <= current + 2)) {
+                html += `<button onclick="loadDeepDataList(${i})" class="px-3 py-1 rounded text-sm ${i === current ? 'bg-accent text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}">${i}</button>`;
+            } else if (i === current - 3 || i === current + 3) { html += `<span class="text-gray-600">...</span>`; }
+        }
+        html += `<button onclick="loadDeepDataList(${current + 1})" ${current === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:text-white"'} class="px-2 py-1 text-gray-400 text-sm"><i class="fas fa-chevron-right"></i></button>`;
+        container.innerHTML = html;
+    }
+
+    function toggleDeepSelectAll(checkbox) {
+        const isChecked = checkbox.checked;
+        const items = document.querySelectorAll('.deep-item-checkbox');
+        items.forEach(cb => {
+            cb.checked = isChecked;
+            const idMatch = cb.getAttribute('onchange').match(/toggleDeepSelection\((\d+), this\)/);
+            if (idMatch) {
+                const id = parseInt(idMatch[1]);
+                if (isChecked) deepSelectedIds.add(id); else deepSelectedIds.delete(id);
+            }
+        });
+    }
+
+    function toggleDeepSelection(id, checkbox) {
+        if (checkbox.checked) deepSelectedIds.add(id); else deepSelectedIds.delete(id);
+    }
+
+    async function deleteDeepData(id) {
+        if (!confirm('确定要删除这条深度采集数据吗？删除后源数据状态将重置为“未采集”。')) return;
+        try {
+            const response = await fetch(`/deep_data/delete/${id}`, { method: 'POST' });
+            if (response.ok) loadDeepDataList(deepPage);
+        } catch (error) { alert('删除失败: ' + error); }
+    }
+
+    async function batchDeleteDeepData() {
+        if (deepSelectedIds.size === 0) { alert('请先选择要删除的数据'); return; }
+        if (!confirm(`确定要批量删除这 ${deepSelectedIds.size} 条深度采集数据吗？`)) return;
+        try {
+            const response = await fetch('/deep_data/batch_delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: Array.from(deepSelectedIds) })
+            });
+            if (response.ok) loadDeepDataList(1);
+        } catch (error) { alert('批量删除失败: ' + error); }
+    }
+
+    function openDeepDataModal(item) {
+        const analysis = JSON.parse(item.structured_data || '{}');
+        document.getElementById('deep-data-id').value = item.id;
+        document.getElementById('deep-data-title').value = item.title;
+        document.getElementById('deep-data-summary').value = item.summary;
+        document.getElementById('deep-data-content').value = item.content;
+        document.getElementById('deep-data-category').value = analysis.category || '';
+        document.getElementById('deep-data-sentiment').value = analysis.sentiment || '';
+        document.getElementById('deep-data-json').value = JSON.stringify(analysis, null, 2);
+
+        document.getElementById('deep-data-modal').classList.remove('hidden');
+    }
+
+    function closeDeepDataModal() {
+        document.getElementById('deep-data-modal').classList.add('hidden');
+    }
+
+    async function saveDeepData() {
+        const id = document.getElementById('deep-data-id').value;
+        const payload = {
+            id: parseInt(id),
+            title: document.getElementById('deep-data-title').value,
+            summary: document.getElementById('deep-data-summary').value,
+            content: document.getElementById('deep-data-content').value,
+            structured_data: document.getElementById('deep-data-json').value
+        };
+
+        try {
+            const response = await fetch('/deep_data/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+                alert('保存成功');
+                closeDeepDataModal();
+                loadDeepDataList(deepPage);
+            }
+        } catch (error) { alert('保存失败: ' + error); }
+    }
+
+    async function batchDeleteData() {
+        if (dataSelectedIds.size === 0) {
+            alert('请先选择要删除的数据');
+            return;
+        }
+
+        if (!confirm(`确定要删除选中的 ${dataSelectedIds.size} 条数据吗？`)) return;
+
+        try {
+            const response = await fetch('/data/batch_delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: Array.from(dataSelectedIds) })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                loadDataList(1);
+            } else {
+                alert('批量删除失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('请求异常: ' + error);
+        }
+    }
+
+
+    // 自动刷新逻辑：如果当前在数据管理页面，每 30 秒刷新一次列表
+    setInterval(() => {
+        const dataPageDiv = document.getElementById('data-page');
+        if (dataPageDiv && !dataPageDiv.classList.contains('hidden')) {
+            // 只有当没有正在搜索且没勾选任何项时才自动刷新，避免干扰用户操作
+            if (dataSearchQuery === "" && dataSelectedIds.size === 0) {
+                loadDataList(dataPage);
+            }
+        }
+    }, 30000);
+
+    function clearShowcase() {
+        const list = document.getElementById('showcase-list');
+        if (list) list.innerHTML = '';
+        currentDataBuffer = [];
+        selectedIndices.clear();
+        updateSaveButton();
+        const hint = document.getElementById('empty-hint');
+        if (hint) hint.classList.remove('hidden');
+
+        const selectAllContainer = document.getElementById('select-all-container');
+        if (selectAllContainer) selectAllContainer.classList.add('hidden');
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    }
+
+    // AI 模型管理核心逻辑
+    function openAddModelModal() {
+        document.getElementById('model-id').value = '';
+        document.getElementById('model-modal-title').innerHTML = '<i class="fas fa-plus-circle mr-2"></i> 接入新引擎';
+        document.getElementById('model-modal-btn').innerText = '确认接入';
+        document.getElementById('model-display-name').value = '';
+        document.getElementById('model-real-name').value = '';
+        document.getElementById('model-api-url').value = 'https://api.siliconflow.cn/v1/';
+        document.getElementById('model-api-key').value = '';
+        document.getElementById('model-system-prompt').value = '';
+        document.getElementById('model-modal').classList.remove('hidden');
+    }
+
+    function editModel(model) {
+        document.getElementById('model-id').value = model.id;
+        document.getElementById('model-modal-title').innerHTML = '<i class="fas fa-cog mr-2"></i> 配置引擎属性';
+        document.getElementById('model-modal-btn').innerText = '保存配置';
+        document.getElementById('model-display-name').value = model.name;
+        document.getElementById('model-real-name').value = model.model_name;
+        document.getElementById('model-api-url').value = model.api_url;
+        document.getElementById('model-api-key').value = model.api_key;
+        document.getElementById('model-system-prompt').value = model.system_prompt;
+        document.getElementById('model-modal').classList.remove('hidden');
+    }
+
+    function closeModelModal() {
+        document.getElementById('model-modal').classList.add('hidden');
+    }
+
+    async function submitModelForm(e) {
+        e.preventDefault();
+        const modelId = document.getElementById('model-id').value;
+        const payload = {
+            id: modelId,
+            name: document.getElementById('model-display-name').value,
+            model_name: document.getElementById('model-real-name').value,
+            api_url: document.getElementById('model-api-url').value,
+            api_key: document.getElementById('model-api-key').value,
+            system_prompt: document.getElementById('model-system-prompt').value
+        };
+
+        const url = modelId ? '/model/update' : '/model/add';
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                location.reload();
+            } else {
+                alert('操作失败: ' + result.error);
+            }
+        } catch (error) {
+            alert('请求异常: ' + error);
+        }
+    }
+
+    async function deleteModel(id) {
+        if (!confirm('确定要删除该模型配置吗？这将同时清理相关的 Token 记录。')) return;
+        try {
+            const response = await fetch(`/model/delete/${id}`, { method: 'POST' });
+            if (response.ok) {
+                location.reload();
+            }
+        } catch (error) {
+            alert('删除异常: ' + error);
+        }
+    }
+
+    function openChatTestModal(id, name) {
+        document.getElementById('chat-model-id').value = id;
+        document.getElementById('chat-model-name').innerText = name;
+        document.getElementById('chat-window').innerHTML = `
+            <div class="flex justify-start">
+                <div class="bg-white/5 rounded-2xl rounded-tl-none p-4 max-w-[80%] text-gray-300 text-sm">
+                    欢迎进入模型测试模式！您可以发送任何消息来验证 API 连通性以及系统提示词逻辑。
+                </div>
+            </div>
+        `;
+        document.getElementById('chat-test-modal').classList.remove('hidden');
+    }
+
+    function closeChatTestModal() {
+        document.getElementById('chat-test-modal').classList.add('hidden');
+    }
+
+    async function sendChatMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        const modelId = document.getElementById('chat-model-id').value;
+        const hint = document.getElementById('chat-status-hint');
+        const btn = document.getElementById('chat-send-btn');
+
+        if (!message) return;
+
+        appendMessage('user', message);
+        input.value = '';
+        hint.innerText = 'AI 正在思考中...';
+        btn.disabled = true;
+
+        // 创建 AI 消息占位符
+        const aiMsgDiv = appendMessage('ai', '');
+        const contentDiv = aiMsgDiv.querySelector('.ai-content-body');
+        let fullText = "";
+
+        try {
+            const url = `/model/chat-stream?model_id=${modelId}&message=${encodeURIComponent(message)}`;
+            const eventSource = new EventSource(url);
+
+            eventSource.onmessage = function (event) {
+                // 处理如果是 JSON 错误
+                if (event.data.startsWith('{')) {
+                    try {
+                        const err = JSON.parse(event.data);
+                        if (err.error) {
+                            contentDiv.innerHTML = `<span class="text-danger">错误: ${err.error}</span>`;
+                            eventSource.close();
+                            btn.disabled = false;
+                            return;
+                        }
+                    } catch (e) { }
+                }
+
+                // 正常文本追加
+                fullText += event.data;
+                contentDiv.innerText = fullText;
+                document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
+                hint.innerText = 'AI 正在回复...';
+            };
+
+            eventSource.onerror = function () {
+                eventSource.close();
+                btn.disabled = false;
+                hint.innerText = '对话完成';
+            };
+
+        } catch (error) {
+            contentDiv.innerHTML = `<span class="text-danger">连接异常: ${error}</span>`;
+            btn.disabled = false;
+        }
+    }
+
+    function appendMessage(role, content, usage = null) {
+        const chatWindow = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+        let contentHtml = '';
+        if (role === 'user') {
+            contentHtml = `<div class="bg-purple-600/30 border border-purple-500/30 rounded-2xl rounded-tr-none p-4 max-w-[80%] text-white text-sm">${content}</div>`;
+        } else if (role === 'ai') {
+            contentHtml = `
+                <div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none p-4 max-w-[80%] text-gray-300 text-sm">
+                    <div class="ai-content-body">${content}</div>
+                    ${usage ? `<div class="mt-2 pt-2 border-t border-white/5 text-[9px] text-gray-500">消耗 Token: ${usage.total} (${usage.prompt} 提问 / ${usage.completion} 回答)</div>` : ''}
+                </div>
+            `;
+        } else {
+            contentHtml = `<div class="bg-danger/10 border border-danger/30 rounded-2xl p-4 max-w-[80%] text-danger text-xs">${content}</div>`;
+        }
+
+        div.innerHTML = contentHtml;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return div;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 页面切换逻辑 ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page-content');
+
+        navLinks.forEach((link) => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('data-target') + '-page';
+
+                // --- 新增：数智大屏跳转逻辑 ---
+                if (link.getAttribute('data-target') === 'screen') {
+                    window.open('/screen', '_blank', 'width=' + window.screen.width + ',height=' + window.screen.height + ',fullscreen=yes');
+                    return;
+                }
+
+                navLinks.forEach(l => {
+                    l.classList.remove('bg-primary/20', 'border-l-4', 'border-primary', 'text-white');
+                    l.classList.add('text-gray-400', 'hover:bg-white/5', 'hover:text-white');
+                });
+                link.classList.add('bg-primary/20', 'border-l-4', 'border-primary', 'text-white');
+                link.classList.remove('text-gray-400', 'hover:bg-white/5', 'hover:text-white');
+
+                pages.forEach(p => p.classList.add('hidden'));
+                const targetPage = document.getElementById(targetId);
+                if (targetPage) {
+                    targetPage.classList.remove('hidden');
+                    const pageId = link.getAttribute('data-target');
+                    if (pageId === 'data') {
+                        loadDataList(1);
+                    } else if (pageId === 'deep') {
+                        loadDeepDataList(1);
+                    } else if (pageId === 'analysis') {
+                        loadAnalysisHistory();
+                    }
+                }
+            });
+        });
+
+        // --- 数据注入与图表 ---
+        // --- 数据注入与图表 ---
+        const acquisitionData = {{ acquisition_data | tojson | safe
+    }};
+    const sentimentData = {{ sentiment_data | tojson | safe }};
+
+    const acqElement = document.getElementById('acquisition-chart');
+    if (acqElement) {
+        const acquisitionChart = echarts.init(acqElement, 'dark');
+        acquisitionChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis' },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: acquisitionData.days },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+            series: [{
+                name: '采集量',
+                type: 'line',
+                smooth: true,
+                data: acquisitionData.values,
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(22, 93, 255, 0.5)' },
+                        { offset: 1, color: 'rgba(22, 93, 255, 0.1)' }
+                    ])
+                },
+                lineStyle: { color: '#165DFF', width: 3 }
+            }]
+        });
+        window.addEventListener('resize', () => acquisitionChart.resize());
+    }
+
+    const sentElement = document.getElementById('sentiment-chart');
+    if (sentElement) {
+        const sentimentChart = echarts.init(sentElement, 'dark');
+        sentimentChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item' },
+            legend: { top: '5%', left: 'center', textStyle: { color: '#9CA3AF' } },
+            series: [{
+                name: '数据来源分布',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                center: ['50%', '60%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 10, borderColor: '#1D2129', borderWidth: 2 },
+                label: { show: false },
+                data: sentimentData
+            }]
+        });
+        window.addEventListener('resize', () => sentimentChart.resize());
+    }
+
+    // --- 系统资源监控同步逻辑 ---
+    async function fetchSystemStats() {
+        try {
+            const res = await fetch('/api/system_stats');
+            const data = await res.json();
+            if (data.error) return;
+
+            document.getElementById('cpu-usage-val').innerText = data.cpu + '%';
+            document.getElementById('cpu-usage-bar').style.width = data.cpu + '%';
+
+            document.getElementById('mem-usage-val').innerText = data.memory + '%';
+            document.getElementById('mem-usage-bar').style.width = data.memory + '%';
+
+            document.getElementById('disk-usage-val').innerText = data.disk + '%';
+            document.getElementById('disk-usage-bar').style.width = data.disk + '%';
+
+            // 更新运行时间卡片
+            const uptimeEl = document.getElementById('system-uptime-val');
+            if (uptimeEl) uptimeEl.innerText = data.uptime;
+        } catch (err) {
+            console.error("System monitor error:", err);
+        }
+    }
+
+    // 开启定时同步 (每 5 秒一次)
+    fetchSystemStats();
+    setInterval(fetchSystemStats, 5000);
+
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const sidebarEl = document.getElementById('sidebar');
+    if (toggleSidebarBtn && sidebarEl) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            sidebarEl.classList.toggle('hidden');
+            sidebarEl.classList.toggle('block');
+        });
+    }
+    });
+
+    function navigateToDeep(deepId) {
+        // 切换到深采管理页面
+        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+        document.getElementById('deep-page').classList.remove('hidden');
+
+        // 更新侧边栏高亮
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('bg-primary/20', 'border-l-4', 'border-primary', 'text-white');
+            l.classList.add('text-gray-400');
+            if (l.getAttribute('data-target') === 'deep') {
+                l.classList.add('bg-primary/20', 'border-l-4', 'border-primary', 'text-white');
+                l.classList.remove('text-gray-400');
+            }
+        });
+
+        // 搜索对应的 ID 并加载
+        loadDeepDataList(1);
+    }
+
+    // --- AI分析报告聊天核心逻辑 ---
+    let analysisChatHistory = [];
+
+    function handleAnalysisKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAnalysisMessage();
+        }
+    }
+
+    // --- AI 分析报告 (ChatGPT 模式核心逻辑) ---
+    let currentConversationId = null;
+
+    async function loadAnalysisHistory() {
+        const historyList = document.getElementById('analysis-history-list');
+        try {
+            const res = await fetch('/analysis/conversations');
+            const data = await res.json();
+
+            if (!data || data.length === 0) {
+                historyList.innerHTML = '<div class="text-center py-10 text-gray-600 text-[10px]">尚未创建会话</div>';
+                return;
+            }
+
+            historyList.innerHTML = data.map(conv => `
+                <div class="group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-white/5 transition-all mb-1 ${currentConversationId == conv.id ? 'bg-primary/10 border-l-2 border-primary' : ''}" 
+                    onclick="loadConversation(${conv.id})">
+                    <div class="flex items-center min-w-0 flex-1">
+                        <i class="fas fa-comment-alt text-gray-500 text-xs mr-3"></i>
+                        <span class="text-xs text-gray-300 truncate">${conv.title}</span>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteConversation(${conv.id})" class="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-danger hover:bg-white/10 rounded transition-all">
+                        <i class="fas fa-times text-[10px]"></i>
+                    </button>
+                </div>
+            `).join('');
+
+        } catch (e) {
+            console.error("加载历史记录失败:", e);
+        }
+    }
+
+    async function startNewAnalysisChat() {
+        currentConversationId = null;
+        document.getElementById('current-chat-title').innerText = '新会话';
+        document.getElementById('current-chat-status').innerText = '当前：等待输入';
+        document.getElementById('analysis-chat-window').innerHTML = `
+            <div id="analysis-welcome" class="flex justify-start">
+                <div class="flex items-start max-w-[85%]">
+                    <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-3 flex-shrink-0 border border-primary/20">
+                        <i class="fas fa-robot text-primary text-xs"></i>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none p-4 text-gray-300 text-sm leading-relaxed shadow-lg">
+                        开启了一个全新的分析视角。请告诉我您想了解的政企数据详情。
+                    </div>
+                </div>
+            </div>
+        `;
+        loadAnalysisHistory();
+    }
+
+    async function loadConversation(id) {
+        currentConversationId = id;
+        const chatWindow = document.getElementById('analysis-chat-window');
+        chatWindow.innerHTML = '<div class="flex justify-center py-20"><div class="animate-spin text-primary"><i class="fas fa-circle-notch fa-2x"></i></div></div>';
+
+        try {
+            const res = await fetch(`/analysis/conversation/${id}`);
+            const messages = await res.json();
+
+            chatWindow.innerHTML = '';
+            messages.forEach(msg => {
+                const isUser = msg.role === 'user';
+                const container = appendAnalysisMessage(msg.role, isUser ? msg.content : '', 'msg-' + msg.id);
+
+                if (!isUser) {
+                    const contentEl = container.querySelector('.ai-content');
+                    const rawText = msg.raw_content || msg.content;
+
+                    // 1. 处理思考块
+                    const thoughtRegex = /<thought>([\s\S]*?)(?:<\/thought>|$)/;
+                    const thoughtMatch = rawText.match(thoughtRegex);
+                    if (thoughtMatch) {
+                        const thoughtEl = container.querySelector('.ai-thought');
+                        thoughtEl.innerHTML = `<div class="thought-header"><i class="fas fa-lightbulb mr-2"></i> 已归档思考过程</div>${thoughtMatch[1]}`;
+                        thoughtEl.classList.remove('hidden');
+                    }
+
+                    // 2. 渲染主内容
+                    let mainText = rawText.replace(thoughtRegex, "");
+                    // 移除 DSML 标签
+                    mainText = mainText.replace(/<(?:\||｜)DSML(?:\||｜)[\s\S]*?(?:(?:\||｜)>|$)/g, "");
+
+                    contentEl.innerHTML = marked.parse(mainText);
+                    contentEl.classList.add('markdown-body');
+
+                    // 3. 渲染图表
+                    parseAndRenderCharts(rawText, contentEl);
+                }
+            });
+
+            // 更新 UI 状态
+            loadAnalysisHistory();
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            document.getElementById('current-chat-title').innerText = '分析记录 #' + id;
+            document.getElementById('current-chat-status').innerText = '当前：历史追溯中';
+
+        } catch (e) {
+            chatWindow.innerHTML = `<div class="text-danger p-4">加载失败: ${e}</div>`;
+        }
+    }
+
+    async function deleteConversation(id) {
+        if (!confirm('确定要永久删除此分析会话吗？')) return;
+        try {
+            await fetch(`/analysis/conversation/${id}`, { method: 'DELETE' });
+            if (currentConversationId === id) startNewAnalysisChat();
+            else loadAnalysisHistory();
+        } catch (e) {
+            alert('删除失败');
+        }
+    }
+
+    async function sendAnalysisMessage() {
+        const input = document.getElementById('analysis-input');
+        const message = input.value.trim();
+        const modelId = document.getElementById('analysis-model-select').value;
+        const chatWindow = document.getElementById('analysis-chat-window');
+
+        if (!message) return;
+
+        // 清除欢迎语
+        const welcome = document.getElementById('analysis-welcome');
+        if (welcome) welcome.remove();
+
+        appendAnalysisMessage('user', message);
+        input.value = '';
+        input.style.height = 'auto';
+
+        const aiMsgId = 'ai-msg-' + Date.now();
+        const aiMsgContainer = appendAnalysisMessage('ai', '', aiMsgId);
+        const contentEl = aiMsgContainer.querySelector('.ai-content');
+        const thoughtEl = aiMsgContainer.querySelector('.ai-thought');
+        const statusEl = aiMsgContainer.querySelector('.ai-status');
+
+        document.getElementById('current-chat-status').innerText = '当前：AI 正在深度思考...';
+
+        try {
+            const response = await fetch('/analysis/chat-stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model_id: modelId,
+                    message: message,
+                    conversation_id: currentConversationId
+                })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullRawText = "";
+            let streamBuffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                streamBuffer += decoder.decode(value, { stream: true });
+
+                // 按照 SSE 规范，事件由双换行符分隔
+                let events = streamBuffer.split('\n\n');
+                streamBuffer = events.pop(); // 最后一个可能不完整，留给下次
+
+                for (let event of events) {
+                    const lines = event.split('\n');
+                    let eventData = "";
+
+                    for (let line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const part = line.slice(6);
+                            if (part === '[DONE]') continue;
+                            eventData += part;
+                        }
+                    }
+
+                    if (eventData) {
+                        fullRawText += eventData;
+                        let displayContent = fullRawText;
+                        console.log('[Frontend] Received chunk, total length:', fullRawText.length);
+                        console.log('[Frontend] Raw content preview:', fullRawText.substring(0, 200));
+
+
+                        // 1. 过滤技术标签（简单粗暴：发现DSML就直接截断）
+                        const dsmlIndex = displayContent.search(/[<｜|]+\s*dsml/i);
+                        if (dsmlIndex !== -1) {
+                            displayContent = displayContent.substring(0, dsmlIndex).trim();
+                        }
+                        const hasDSML = dsmlIndex !== -1;
+                        console.log('[Frontend] After DSML filter, length:', displayContent.length, 'hasDSML:', hasDSML);
+
+                        // 2. 处理思考标签（只处理正确关闭的标签）
+                        const thoughtMatch = displayContent.match(/<thought>([\s\S]*?)<\/thought>/);
+                        if (thoughtMatch) {
+                            thoughtEl.innerHTML = `<div class="thought-header"><i class="fas fa-brain mr-2"></i> 实时思维链</div>${thoughtMatch[1]}`;
+                            thoughtEl.classList.remove('hidden');
+                            displayContent = displayContent.replace(/<thought>[\s\S]*?<\/thought>/, "");
+                        }
+
+                        // 3. 渲染 Markdown 并管理状态条
+                        const cleanedText = displayContent.trim();
+                        if (cleanedText) {
+                            console.log('[Frontend] Rendering content, length:', cleanedText.length);
+                            // 有实际内容了，隐藏状态条并渲染
+                            statusEl.classList.add('hidden');
+                            contentEl.innerHTML = marked.parse(displayContent);
+                            contentEl.classList.add('markdown-body');
+
+                            // 4. 渲染 ECharts 图表
+                            parseAndRenderCharts(fullRawText, contentEl);
+                        } else if (hasDSML) {
+                            // 只有 DSML 标签，显示检索中
+                            statusEl.innerHTML = '<div class="status-indicator"><i class="fas fa-terminal mr-2"></i> AI 正在执行数据检索... <span class="loading-dots"></span></div>';
+                            statusEl.classList.remove('hidden');
+                        }
+
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
+                }
+            }
+
+            // 对话结束
+            parseAndRenderCharts(fullRawText, contentEl);
+            document.getElementById('current-chat-status').innerText = '当前：分析已完成';
+
+            // 如果是新会话，刷新侧边栏
+            if (!currentConversationId) {
+                loadAnalysisHistory();
+            }
+
+        } catch (error) {
+            contentEl.innerHTML = `<span class="text-danger">连接分析引擎失败: ${error}</span>`;
+            document.getElementById('current-chat-status').innerText = '当前：异常中断';
+        }
+    }
+
+    function appendAnalysisMessage(role, text, id) {
+        const chatWin = document.getElementById('analysis-chat-window');
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in mb-6`;
+
+        const contentHtml = role === 'user' ? `
+            <div class="flex items-start max-w-[85%]">
+                <div class="bg-primary text-white rounded-2xl rounded-tr-none p-4 text-sm shadow-neon">
+                    ${text}
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center ml-3 flex-shrink-0 shadow-lg">
+                    <i class="fas fa-user-shield text-xs"></i>
+                </div>
+            </div>
+        ` : `
+            <div class="flex items-start max-w-[90%]">
+                <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-3 flex-shrink-0 border border-primary/20 shadow-lg">
+                    <i class="fas fa-robot text-primary text-xs"></i>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none p-4 text-gray-300 text-sm leading-relaxed overflow-hidden shadow-xl">
+                    <div class="ai-status hidden mb-2"></div>
+                    <div class="ai-thought thought-block hidden"></div>
+                    <div class="ai-content whitespace-pre-wrap">${text}</div>
+                    <div class="ai-charts-container mt-4 space-y-4"></div>
+                </div>
+            </div>
+        `;
+
+        wrapper.innerHTML = contentHtml;
+        if (id) wrapper.id = id;
+        chatWin.appendChild(wrapper);
+        chatWin.scrollTop = chatWin.scrollHeight;
+        return wrapper;
+    }
+
+    function parseAndRenderCharts(text, parentEl) {
+        const chartRegex = /```json_chart\s*([\s\S]*?)```/g;
+        let match;
+        const container = parentEl.closest('.bg-white\\/5').querySelector('.ai-charts-container');
+        if (!container) return;
+
+        while ((match = chartRegex.exec(text)) !== null) {
+            try {
+                const config = JSON.parse(match[1].trim());
+                renderAnalysisChart(config, container);
+            } catch (e) {
+                console.error("图表 JSON 解析失败:", e, match[1]);
+            }
+        }
+    }
+
+    function renderAnalysisChart(config, container) {
+        const chartDiv = document.createElement('div');
+        chartDiv.className = "w-full h-80 bg-black/20 rounded-xl p-4 border border-white/5 shadow-inner mb-4";
+        container.appendChild(chartDiv);
+
+        const chart = echarts.init(chartDiv, 'dark');
+        const option = {
+            backgroundColor: 'transparent',
+            title: { text: config.title, left: 'center', textStyle: { fontSize: 13, color: '#E5E7EB', fontWeight: 'bold' } },
+            tooltip: { trigger: config.type === 'pie' ? 'item' : 'axis', backgroundColor: 'rgba(17, 24, 39, 0.8)', borderColor: '#374151', textStyle: { color: '#fff' } },
+            legend: { bottom: 0, textStyle: { color: '#9CA3AF', fontSize: 10 } },
+            xAxis: config.type !== 'pie' ? {
+                type: 'category',
+                data: config.data.labels,
+                axisLabel: { color: '#6B7280', fontSize: 10 },
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+            } : undefined,
+            yAxis: config.type !== 'pie' ? {
+                type: 'value',
+                axisLabel: { color: '#6B7280', fontSize: 10 },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
+            } : undefined,
+            series: [{
+                name: config.title,
+                type: config.type,
+                data: config.data.values.map((v, i) => {
+                    return config.type === 'pie' ? { name: config.data.labels[i], value: v } : v;
+                }),
+                radius: config.type === 'pie' ? ['45%', '70%'] : undefined,
+                itemStyle: { borderRadius: 6 },
+                smooth: true,
+                areaStyle: config.type === 'line' ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(22, 93, 255, 0.3)' }, { offset: 1, color: 'rgba(22, 93, 255, 0)' }]) } : undefined,
+                color: ['#165DFF', '#722ED1', '#13C2C2', '#FADB14', '#F5222D', '#2FC25B']
+            }]
+        };
+
+        chart.setOption(option);
+        window.addEventListener('resize', () => chart.resize());
+    }
+</script>
+{% endblock %}

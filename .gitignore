@@ -1,0 +1,29 @@
+# 数据库文件
+*.db
+*.sqlite3
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# 静态资源库 (建议通过 CDN 加载，或者只保留压缩后的生产文件)
+# app/static/vendor/
+
+# 临时测试文件
+*_test.py
+test_*.py
+check_*.py
+debug_*.py
+*.html
+!app/templates/*.html
+
+# IDE 设置
+.vscode/
+.idea/

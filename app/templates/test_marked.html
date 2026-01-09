@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Marked.js Test</title>
+    <script src="/static/vendor/marked.min.js"></script>
+</head>
+
+<body>
+    <h1>Marked.js Library Test</h1>
+    <div id="output"></div>
+    <script>
+        if (typeof marked === 'undefined') {
+            document.getElementById('output').innerHTML = '<p style="color: red;">❌ marked.js NOT loaded</p>';
+        } else {
+            const markdown = '# Hello\n\nThis is **bold** text.';
+            const html = marked.parse(markdown);
+            document.getElementById('output').innerHTML = '<p style="color: green;">✅ marked.js loaded successfully!</p><hr>' + html;
+        }
+    </script>
+</body>
+
+</html>

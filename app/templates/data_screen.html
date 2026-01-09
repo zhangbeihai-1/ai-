@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>政企数智分析大屏 - 全球政企信息可视化平台</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- ECharts & ECharts-GL -->
+    <script src="/static/vendor/echarts/package/dist/echarts.min.js"></script>
+    <script src="/static/vendor/echarts-gl.min.js"></script>
+
+    <style>
+        :root {
+            --primary-cyan: #00f2ff;
+            --tech-blue: #165DFF;
+            --bg-dark: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.7);
+            --border-color: rgba(0, 242, 255, 0.3);
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Noto+Sans+SC', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            /* 绚丽星空背景 */
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            position: relative;
+        }
+
+        /* 动态星星层 */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(1px 1px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(1.5px 1.5px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 130px 80px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 160px 120px, #eee, rgba(0, 0, 0, 0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.3;
+            animation: stars-twinkle 4s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes stars-twinkle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* 大屏边框样式 */
+        .tech-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .tech-panel::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 20px;
+            height: 20px;
+            border-top: 3px solid var(--primary-cyan);
+            border-left: 3px solid var(--primary-cyan);
+        }
+
+        .tech-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 20px;
+            height: 20px;
+            border-bottom: 3px solid var(--primary-cyan);
+            border-right: 3px solid var(--primary-cyan);
+        }
+
+        .panel-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.1), transparent);
+        }
+
+        .header-bg {
+            background: url('https://user-images.githubusercontent.com/11262962/165500000-00000000-0000-0000-0000-000000000000.png') no-repeat center top;
+            background-size: 100% 100%;
+            height: 80px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(180deg, #fff 0%, var(--primary-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+            letter-spacing: 4px;
+        }
+
+        /* 动画 */
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .scanning {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanning::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        .count-up {
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="p-4 h-screen flex flex-col">
+    <!-- 头部 -->
+    <header class="header-bg mb-4">
+        <div class="absolute left-10 top-6 text-gray-400">
+            <span id="date-time">2026/01/08 15:00:00</span>
+            <span class="ml-4 text-xs">星期四</span>
+        </div>
+        <h1 class="screen-title mb-4">政企数智分析大屏</h1>
+        <div class="absolute right-10 top-6 text-gray-400">
+            <span class="text-xs">系统状态:</span>
+            <span class="text-green-500 animate-pulse ml-1">● 在线</span>
+        </div>
+    </header>
+
+    <div class="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
+        <!-- 左侧列 -->
+        <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-chart-pie mr-2 text-cyan-400"></i> 数据采集实时动态
+                </div>
+                <div class="p-4 flex-1 grid grid-cols-2 gap-4">
+                    <div class="flex flex-col justify-center items-center p-2 bg-white/5 rounded">
+                        <span class="text-gray-400 text-xs">今日采集</span>
+                        <span class="text-2xl font-bold orbitron count-up" id="stat-today">0</span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center p-2 bg-white/5 rounded">
+                        <span class="text-gray-400 text-xs">本周采集</span>
+                        <span class="text-2xl font-bold orbitron" id="stat-week">0</span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center p-2 bg-white/5 rounded text-blue-400">
+                        <span class="text-gray-400 text-xs">本月采集</span>
+                        <span class="text-2xl font-bold orbitron" id="stat-month">0</span>
+                    </div>
+                    <div class="flex flex-col justify-center items-center p-2 bg-white/5 rounded text-purple-400">
+                        <span class="text-gray-400 text-xs">深度采集中</span>
+                        <span class="text-2xl font-bold orbitron" id="stat-deep">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-satellite-dish mr-2 text-cyan-400"></i> 数据来源分布
+                </div>
+                <div id="source-chart" class="flex-1 p-2"></div>
+            </div>
+
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-tags mr-2 text-cyan-400"></i> 热词监测排行榜
+                </div>
+                <div class="p-2 overflow-y-auto flex-1">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="text-gray-500 border-b border-white/10">
+                                <th class="pb-2 pl-2">排名</th>
+                                <th class="pb-2">热词</th>
+                                <th class="pb-2 text-right pr-2">频率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keyword-list">
+                            <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间列 -->
+        <div class="col-span-6 flex flex-col gap-4">
+            <div class="flex-1 relative overflow-hidden flex flex-col justify-center items-center">
+                <!-- 地球容器 -->
+                <div id="glb-globe" class="w-full h-full"></div>
+
+                <!-- 地球下方的科技圆环装饰 -->
+                <div class="absolute bottom-10 w-96 h-20 opacity-50 pointer-events-none">
+                    <svg viewBox="0 0 400 100" class="w-full h-full">
+                        <ellipse cx="200" cy="50" rx="180" ry="40" fill="none" stroke="var(--primary-cyan)"
+                            stroke-width="2" stroke-dasharray="20 10">
+                            <animateTransform attributeName="transform" type="rotate" from="0 200 50" to="360 200 50"
+                                dur="20s" repeatCount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="200" cy="50" rx="120" ry="25" fill="none" stroke="var(--tech-blue)"
+                            stroke-width="1" stroke-dasharray="10 5">
+                            <animateTransform attributeName="transform" type="rotate" from="360 200 50" to="0 200 50"
+                                dur="10s" repeatCount="indefinite" />
+                        </ellipse>
+                    </svg>
+                </div>
+
+                <!-- 浮动核心指标 -->
+                <div class="absolute top-10 left-10 tech-panel p-4 w-48 animate-float">
+                    <div class="text-xs text-gray-400">累计政企数据</div>
+                    <div class="text-3xl font-bold orbitron text-cyan-400" id="stat-total">0</div>
+                    <div class="text-[10px] text-green-500 mt-1"><i class="fas fa-arrow-up"></i> 12.5% YoY</div>
+                </div>
+
+                <div class="absolute top-10 right-10 tech-panel p-4 w-48 animate-float" style="animation-delay: 1s">
+                    <div class="text-xs text-gray-400">情报解析深度</div>
+                    <div class="text-3xl font-bold orbitron text-blue-400" id="stat-depth-pct">0%</div>
+                    <div class="text-[10px] text-blue-400 mt-1">AI解析全覆盖</div>
+                </div>
+            </div>
+
+            <!-- 底部主要报表 -->
+            <div class="h-48 tech-panel overflow-hidden flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-history mr-2 text-cyan-400"></i> 最新深度情报分析摘要
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto" id="deep-news-ticker">
+                    <!-- 动态滚动 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧列 -->
+        <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-chart-line mr-2 text-cyan-400"></i> 近期采集趋势
+                </div>
+                <div id="trend-chart" class="flex-1 p-2"></div>
+            </div>
+
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-shield-alt mr-2 text-cyan-400"></i> 行业情报监控分布
+                </div>
+                <div id="industry-chart" class="flex-1 p-2"></div>
+            </div>
+
+            <div class="tech-panel flex-1 flex flex-col">
+                <div class="panel-header">
+                    <i class="fas fa-list-ol mr-2 text-cyan-400"></i> 采集任务队列状态
+                </div>
+                <div class="p-3 flex-1">
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>百度新闻采集器</span>
+                                <span class="text-cyan-400">85%</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-cyan-500 h-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>深度解析引擎</span>
+                                <span class="text-blue-400">42%</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>存量数据清洗</span>
+                                <span class="text-purple-400">92%</span>
+                            </div>
+                            <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-purple-500 h-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 时间更新
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.getFullYear() + '/' +
+                String(now.getMonth() + 1).padStart(2, '0') + '/' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('date-time').innerText = timeStr;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 核心数据加载
+        async function loadOverview() {
+            try {
+                const res = await fetch('/api/screen/overview');
+                const data = await res.json();
+
+                document.getElementById('stat-today').innerText = data.today || 0;
+                document.getElementById('stat-week').innerText = data.week || 0;
+                document.getElementById('stat-month').innerText = data.month || 0;
+                document.getElementById('stat-deep').innerText = data.deep || 0;
+                document.getElementById('stat-total').innerText = data.total || 0;
+
+                const depthPct = data.total > 0 ? Math.round((data.deep / data.total) * 100) : 0;
+                document.getElementById('stat-depth-pct').innerText = depthPct + '%';
+
+                // 渲染来源分布
+                renderSourceChart(data.sources);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderSourceChart(sources) {
+            const chart = echarts.init(document.getElementById('source-chart'), 'dark');
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#020617',
+                        borderWidth: 2
+                    },
+                    label: { show: true, fontSize: 10, color: '#94a3b8' },
+                    data: sources.map(s => ({ value: s.count, name: s.source })),
+                    color: ['#00f2ff', '#165DFF', '#722ED1', '#F5222D']
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        async function loadTrend() {
+            try {
+                const res = await fetch('/api/screen/trend');
+                const data = await res.json();
+
+                const chart = echarts.init(document.getElementById('trend-chart'), 'dark');
+                const option = {
+                    backgroundColor: 'transparent',
+                    grid: { top: 20, bottom: 30, left: 40, right: 10 },
+                    xAxis: {
+                        type: 'category',
+                        data: data.map(d => d.date.split('-').slice(1).join('-')),
+                        axisLabel: { fontSize: 10, color: '#64748b' }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                        axisLabel: { fontSize: 10, color: '#64748b' }
+                    },
+                    series: [{
+                        data: data.map(d => d.count),
+                        type: 'line',
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(0, 242, 255, 0.3)' },
+                                { offset: 1, color: 'rgba(0, 242, 255, 0)' }
+                            ])
+                        },
+                        lineStyle: { color: '#00f2ff', width: 2 }
+                    }]
+                };
+                chart.setOption(option);
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadKeywords() {
+            try {
+                const res = await fetch('/api/screen/keywords');
+                const data = await res.json();
+                const tbody = document.getElementById('keyword-list');
+                tbody.innerHTML = data.map((k, i) => `
+                    <tr class="hover:bg-white/5">
+                        <td class="py-2 pl-2"><span class="w-5 h-5 inline-flex items-center justify-center rounded-full ${i < 3 ? 'bg-cyan-500/20 text-cyan-400' : 'bg-gray-800 text-gray-500'}">${i + 1}</span></td>
+                        <td class="text-gray-300 font-medium">${k.keyword}</td>
+                        <td class="text-right pr-2 text-cyan-400 font-bold orbitron">${k.count}</td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDeepRank() {
+            try {
+                const res = await fetch('/api/screen/deep_rank');
+                const data = await res.json();
+                const container = document.getElementById('deep-news-ticker');
+                container.innerHTML = data.map(item => `
+                    <div class="mb-3 p-2 bg-white/5 rounded border-l-2 border-cyan-500">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-cyan-400 truncate w-2/3">${item.title}</span>
+                            <span class="text-[10px] text-gray-500">${item.collect_time.slice(5, 16)}</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 line-clamp-1">${item.summary || '暂无深度解析内容'}</p>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        // 初始化行业分布图（静态示例，若有真实行业属性可对接）
+        function initIndustryChart() {
+            const chart = echarts.init(document.getElementById('industry-chart'), 'dark');
+            const option = {
+                backgroundColor: 'transparent',
+                radar: {
+                    indicator: [
+                        { name: '金融地产', max: 100 },
+                        { name: '科技互联网', max: 100 },
+                        { name: '制造业', max: 100 },
+                        { name: '医疗教育', max: 100 },
+                        { name: '政府机构', max: 100 }
+                    ],
+                    shape: 'circle',
+                    splitNumber: 4,
+                    axisName: { color: '#64748b', fontSize: 10 },
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                    splitArea: { show: false }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{
+                        value: [80, 95, 70, 85, 90],
+                        areaStyle: { color: 'rgba(22, 93, 255, 0.3)' },
+                        lineStyle: { color: '#165DFF' },
+                        itemStyle: { color: '#165DFF' }
+                    }]
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        // --- 核心：3D真实地球渲染 ---
+        function initGlobe() {
+            const chart = echarts.init(document.getElementById('glb-globe'));
+
+            // 贴图资源地址 (使用可靠的 CDN 地址)
+            const earthMap = 'https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data-gl/asset/earth.jpg';
+            const starfield = 'https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data-gl/asset/starfield.jpg';
+
+            const option = {
+                // 关键点 1：设置画布透明
+                backgroundColor: 'transparent',
+                globe: {
+                    // 关键点 2：禁用 GL 内部自带的背景环境，露出 CSS 星空
+                    environment: 'none',
+                    baseTexture: earthMap,    // 地球表面贴图
+                    heightTexture: earthMap,  // 使用同一张图模拟海拔起伏
+
+                    displacementScale: 0.04,
+                    shading: 'realistic',      // 真实感渲染
+                    realisticMaterial: {
+                        roughness: 0.9
+                    },
+
+                    postEffect: {
+                        enable: true,
+                        bloom: {
+                            enable: true,
+                            intensity: 0.1
+                        },
+                        SSAO: {
+                            enable: true,
+                            radius: 1
+                        }
+                    },
+
+                    light: {
+                        main: {
+                            intensity: 1.5,
+                            shadow: true,
+                            alpha: 40,
+                            beta: -30
+                        },
+                        ambient: {
+                            intensity: 0.2
+                        },
+                        ambientCubemap: {
+                            // 环境光贴图，增强质感
+                            texture: starfield,
+                            diffuseIntensity: 0.1
+                        }
+                    },
+
+                    viewControl: {
+                        autoRotate: true,
+                        autoRotateSpeed: 4,
+                        distance: 200,
+                        targetControl: false
+                    },
+
+                    layers: [{
+                        // 云层，增加真实感
+                        type: 'blend',
+                        blendTo: 'emission',
+                        texture: 'https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data-gl/asset/clouds.png',
+                        intensity: 0.2
+                    }]
+                },
+                series: [{
+                    type: 'scatter3D',
+                    coordinateSystem: 'globe',
+                    itemStyle: {
+                        color: '#00f2ff',
+                        opacity: 1
+                    },
+                    symbolSize: 6,
+                    // 模拟在活跃采集点（中国及周边区域）
+                    data: [
+                        [116.46, 39.92, 0], [121.47, 31.23, 0], [113.27, 23.13, 0],
+                        [114.17, 22.28, 0], [104.06, 30.67, 0]
+                    ]
+                }]
+            };
+
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        // 全局启动
+        window.onload = () => {
+            loadOverview();
+            loadTrend();
+            loadKeywords();
+            loadDeepRank();
+            initIndustryChart();
+            initGlobe();
+
+            // 定时数据刷新 (30秒)
+            setInterval(() => {
+                loadOverview();
+                loadTrend();
+                loadKeywords();
+                loadDeepRank();
+            }, 30000);
+        };
+    </script>
+</body>
+
+</html>
