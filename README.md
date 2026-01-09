@@ -82,4 +82,3 @@ python run.py
 3. **线程安全**: 系统在后台执行任务时使用 SSE 推送消息，请确保浏览器无跨域限制。
 
 ---
-*Developed as part of the 2026 Practical Training Program.*
